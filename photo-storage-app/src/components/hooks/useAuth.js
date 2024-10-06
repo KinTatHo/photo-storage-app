@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebase/config';
+import { useState, useEffect } from "react";
+import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -15,5 +15,11 @@ export const useAuth = () => {
     return unsubscribe;
   }, []);
 
-  return { user, isLoading };
+  const signOut = () => {
+    firebaseSignOut(auth).catch((error) => {
+      console.error("Sign out error", error);
+    });
+  };
+
+  return { user, isLoading, signOut };
 };

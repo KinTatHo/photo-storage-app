@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 
-const SignIn = () => {
+const SignIn = ({ onToggleMode }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -17,65 +17,59 @@ const SignIn = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">Sign In</h2>
+    <div className="p-8">
+      <h2 className="text-2xl font-semibold mb-6 text-center">
+        Sign In to Your Gallery
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
             htmlFor="email"
-            className="block text-gray-700 text-sm font-bold mb-2"
+            className="block text-sm font-medium text-gray-700"
           >
             Email
           </label>
           <input
-            id="email"
             type="email"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             required
           />
         </div>
         <div>
           <label
             htmlFor="password"
-            className="block text-gray-700 text-sm font-bold mb-2"
+            className="block text-sm font-medium text-gray-700"
           >
             Password
           </label>
           <input
-            id="password"
             type="password"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             required
           />
         </div>
-        {error && (
-          <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-            role="alert"
-          >
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-        <div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Sign In
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Sign In
+        </button>
       </form>
-      <p className="text-center text-gray-500 text-xs mt-4">
+      {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
+      <p className="mt-4 text-center text-sm text-gray-600">
         Don't have an account?{" "}
-        <a href="/signup" className="text-blue-500 hover:underline">
-          Sign up
-        </a>
+        <button
+          onClick={onToggleMode}
+          className="text-blue-500 hover:underline"
+        >
+          Sign Up
+        </button>
       </p>
     </div>
   );
