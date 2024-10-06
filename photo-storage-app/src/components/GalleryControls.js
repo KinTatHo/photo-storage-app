@@ -1,12 +1,13 @@
 import React, { useState } from "react";
+import { MultiSelect } from "react-multi-select-component";
 
 export const GalleryControls = ({
   sortOrder,
   setSortOrder,
   showFavoritesOnly,
   setShowFavoritesOnly,
-  filterCategory,
-  setFilterCategory,
+  filterCategories,
+  setFilterCategories,
   categories = [],
   onAddCategory,
   onRemoveCategory,
@@ -20,92 +21,95 @@ export const GalleryControls = ({
     }
   };
 
+  const categoryOptions = [
+    { label: "People", value: "people" },
+    { label: "Nature", value: "nature" },
+    { label: "Sky", value: "sky" },
+    { label: "Other", value: "other" },
+    ...categories.map((cat) => ({ label: cat, value: cat })),
+  ];
+
   return (
-    <div className="mb-4 flex flex-wrap justify-between items-center">
-      {/* <h2 className="text-2xl font-semibold mb-2 w-full">Photo Gallery</h2> */}
-      <div className="flex flex-wrap items-center space-x-4">
-        <div className="ml-5">
-          <label htmlFor="sortOrder" className="mr-2">
+    <div className="bg-white shadow-md rounded-lg p-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <label
+            htmlFor="sortOrder"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Sort by:
           </label>
           <select
             id="sortOrder"
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="form-select"
+            className="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           >
             <option value="custom">Custom Order</option>
             <option value="recent">Recently Added</option>
           </select>
         </div>
         <div>
-          <label htmlFor="filterCategory" className="mr-2">
-            Filter:
-          </label>
-          <select
-            id="filterCategory"
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="form-select"
+          <label
+            htmlFor="filterCategory"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
-            <option value="all">All</option>
-            <option value="people">People</option>
-            <option value="nature">Nature</option>
-            <option value="sky">Sky</option>
-            <option value="other">Other</option>
-            {categories &&
-              categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-          </select>
+            Filter by Categories:
+          </label>
+          <MultiSelect
+            options={categoryOptions}
+            value={filterCategories}
+            onChange={setFilterCategories}
+            labelledBy="Select categories"
+            className="w-full"
+          />
         </div>
         <div className="flex items-center">
-          <label htmlFor="showFavorites" className="mr-2">
-            Show Favorites Only
-          </label>
           <input
             type="checkbox"
             id="showFavorites"
             checked={showFavoritesOnly}
             onChange={(e) => setShowFavoritesOnly(e.target.checked)}
-            className="form-checkbox h-5 w-5 text-blue-600"
+            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
-        </div>
-        <div>
-          <input
-            type="text"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="New category"
-            className="form-input mr-2"
-          />
-          <button
-            onClick={handleAddCategory}
-            className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          <label
+            htmlFor="showFavorites"
+            className="ml-2 block text-sm text-gray-900"
           >
-            Add Category
-          </button>
+            Show Favorites Only
+          </label>
         </div>
-        <div>
-          <select
-            onChange={(e) => {
-              if (e.target.value) {
-                onRemoveCategory(e.target.value);
-                e.target.value = "";
-              }
-            }}
-            className="form-select mr-2"
-          >
-            <option value="">Remove a category...</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
+      </div>
+      <div className="mt-4 flex items-center space-x-2">
+        <input
+          type="text"
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value)}
+          placeholder="New category"
+          className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        />
+        <button
+          onClick={handleAddCategory}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Add Category
+        </button>
+        <select
+          onChange={(e) => {
+            if (e.target.value) {
+              onRemoveCategory(e.target.value);
+              e.target.value = "";
+            }
+          }}
+          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        >
+          <option value="">Remove a category...</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

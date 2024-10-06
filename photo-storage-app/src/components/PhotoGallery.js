@@ -23,7 +23,7 @@ const PhotoGallery = ({ userId }) => {
   const [activeId, setActiveId] = useState(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState("custom");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterCategories, setFilterCategories] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -74,12 +74,10 @@ const PhotoGallery = ({ userId }) => {
   };
 
 
-  const filteredPhotos = photos.filter((photo) => {
+  const filteredPhotos = photos.filter(photo => {
     if (showFavoritesOnly && !photo.isFavorite) return false;
-    if (filterCategory === "all") return true;
-    return (
-      photo.category === filterCategory || photo.userCategory === filterCategory
-    );
+    if (filterCategories.length === 0) return true;
+    return filterCategories.some(cat => cat.value === photo.category || cat.value === photo.userCategory);
   });
 
   if (photosLoading || categoriesLoading)
@@ -93,17 +91,19 @@ const PhotoGallery = ({ userId }) => {
 
   return (
     <>
+      <div className="ml-5">
       <GalleryControls
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
         showFavoritesOnly={showFavoritesOnly}
         setShowFavoritesOnly={setShowFavoritesOnly}
-        filterCategory={filterCategory}
-        setFilterCategory={setFilterCategory}
-        categories={categories || []}
+        filterCategories={filterCategories}
+        setFilterCategories={setFilterCategories}
+        categories={categories}
         onAddCategory={handleAddUserCategory}
         onRemoveCategory={handleRemoveUserCategory}
       />
+      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
