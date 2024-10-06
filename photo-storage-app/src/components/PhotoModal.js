@@ -56,7 +56,7 @@ export const PhotoModal = ({
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter location"
+              placeholder="Enter details"
               className="block w-full mt-2 p-2 border rounded"
             />
             <button

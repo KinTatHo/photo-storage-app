@@ -1,5 +1,5 @@
 import { deleteObject, ref } from "firebase/storage";
-import { deleteDoc, doc, updateDoc, addDoc, collection } from "firebase/firestore";
+import { deleteDoc, doc, collection, query, where, getDocs, addDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { db, storage } from "../../firebase/config";
 import { analyzeImage } from "../api/visionApi";
 
@@ -123,10 +123,52 @@ export const updatePhotoDetails = async (
 };
 
 export const addCategory = async (userId, category, setError) => {
-  try {
-    await addDoc(collection(db, "categories"), { userId, name: category });
-  } catch (err) {
-    console.error("Error adding category:", err);
-    setError(err.message);
-  }
-};
+    try {
+      await addDoc(collection(db, "categories"), { userId, name: category });
+    } catch (err) {
+      console.error("Error adding category:", err);
+      setError(err.message);
+    }
+  };
+  
+  export const removeCategory = async (userId, categoryName, setError, setPhotos) => {
+    const batch = writeBatch(db);
+  
+    try {
+      // Find and delete the category document
+      const categoriesRef = collection(db, "categories");
+      const categoryQuery = query(categoriesRef, where("userId", "==", userId), where("name", "==", categoryName));
+      const categorySnapshot = await getDocs(categoryQuery);
+      
+      if (categorySnapshot.empty) {
+        throw new Error("Category not found");
+      }
+  
+      const categoryDoc = categorySnapshot.docs[0];
+      batch.delete(doc(db, "categories", categoryDoc.id));
+  
+      // Find all photos with this category and update them
+      const photosRef = collection(db, "photos");
+      const photosQuery = query(photosRef, where("userId", "==", userId), where("category", "==", categoryName));
+      const photosSnapshot = await getDocs(photosQuery);
+  
+      photosSnapshot.forEach((photoDoc) => {
+        const photoRef = doc(db, "photos", photoDoc.id);
+        batch.update(photoRef, { category: "other" });
+      });
+  
+      // Commit the batch
+      await batch.commit();
+  
+      // Update local state
+      setPhotos((prevPhotos) => 
+        prevPhotos.map((photo) => 
+          photo.category === categoryName ? { ...photo, category: "other" } : photo
+        )
+      );
+  
+    } catch (err) {
+      console.error("Error removing category:", err);
+      setError(err.message);
+    }
+  };

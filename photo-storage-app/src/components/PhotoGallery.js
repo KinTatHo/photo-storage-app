@@ -15,6 +15,7 @@ import {
   analyzePhoto,
   updatePhotoDetails,
   addCategory,
+  removeCategory
 } from "./utils/photoActions";
 
 const PhotoGallery = ({ userId }) => {
@@ -68,6 +69,11 @@ const PhotoGallery = ({ userId }) => {
     await addCategory(userId, category, setError);
   };
 
+  const handleRemoveUserCategory = async (category) => {
+    await removeCategory(userId, category, setError, setPhotos);
+  };
+
+
   const filteredPhotos = photos.filter((photo) => {
     if (showFavoritesOnly && !photo.isFavorite) return false;
     if (filterCategory === "all") return true;
@@ -96,6 +102,7 @@ const PhotoGallery = ({ userId }) => {
         setFilterCategory={setFilterCategory}
         categories={categories || []}
         onAddCategory={handleAddUserCategory}
+        onRemoveCategory={handleRemoveUserCategory}
       />
       <DndContext
         sensors={sensors}

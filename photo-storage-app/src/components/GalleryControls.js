@@ -9,6 +9,7 @@ export const GalleryControls = ({
   setFilterCategory,
   categories = [],
   onAddCategory,
+  onRemoveCategory,
 }) => {
   const [newCategory, setNewCategory] = useState("");
 
@@ -21,9 +22,9 @@ export const GalleryControls = ({
 
   return (
     <div className="mb-4 flex flex-wrap justify-between items-center">
-      <h2 className="text-2xl font-semibold mb-2 w-full">Photo Gallery</h2>
+      {/* <h2 className="text-2xl font-semibold mb-2 w-full">Photo Gallery</h2> */}
       <div className="flex flex-wrap items-center space-x-4">
-        <div>
+        <div className="ml-5">
           <label htmlFor="sortOrder" className="mr-2">
             Sort by:
           </label>
@@ -86,6 +87,24 @@ export const GalleryControls = ({
           >
             Add Category
           </button>
+        </div>
+        <div>
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                onRemoveCategory(e.target.value);
+                e.target.value = "";
+              }
+            }}
+            className="form-select mr-2"
+          >
+            <option value="">Remove a category...</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
