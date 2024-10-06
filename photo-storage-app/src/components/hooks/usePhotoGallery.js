@@ -1,14 +1,27 @@
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import { useAuth } from "./useAuth";
 
 export const usePhotoGallery = () => {
   const [photos, setPhotos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const q = query(collection(db, "photos"), orderBy("order", "desc"));
+    if (!user) {
+      setPhotos([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, "photos"),
+      where("userId", "==", user.uid),
+      orderBy("order", "desc")
+    );
+
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -27,7 +40,7 @@ export const usePhotoGallery = () => {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   return { photos, setPhotos, isLoading, error };
 };
