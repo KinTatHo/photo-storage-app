@@ -1,5 +1,15 @@
 import { deleteObject, ref } from "firebase/storage";
-import { deleteDoc, doc, collection, query, where, getDocs, addDoc, updateDoc, writeBatch } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  writeBatch,
+} from "firebase/firestore";
 import { db, storage } from "../../firebase/config";
 import { analyzeImage } from "../api/visionApi";
 
@@ -66,25 +76,32 @@ export const analyzePhoto = async (
     const result = await analyzeImage(photo.url);
     console.log("Analysis result:", result);
 
-    let category = "other";
+    let categories = ["other"];
     if (result.faces > 0) {
-      category = "people";
-    } else if (
+      categories.push("people");
+    }
+    if (
       result.labels.some((label) =>
         ["nature", "landscape", "outdoor", "plant", "tree"].includes(
           label.toLowerCase()
         )
-      ) &&
-      !result.labels.includes("sky")
+      )
     ) {
-      category = "nature";
-    } else if (result.labels.includes("sky")) {
-      category = "sky";
+      categories.push("nature");
+    }
+    if (result.labels.includes("sky")) {
+      categories.push("sky");
     }
 
-    const updatedPhoto = { ...photo, category, analysisResult: result };
+    // Remove duplicates and "other" if there are other categories
+    categories = [...new Set(categories)];
+    if (categories.length > 1 && categories.includes("other")) {
+      categories = categories.filter((cat) => cat !== "other");
+    }
+
+    const updatedPhoto = { ...photo, categories, analysisResult: result };
     await updateDoc(doc(db, "photos", photo.id), {
-      category,
+      categories,
       analysisResult: result,
     });
     setPhotos((photos) =>
@@ -92,8 +109,7 @@ export const analyzePhoto = async (
     );
 
     setAnalysisResult(result);
-    setSelectedPhoto({ ...photo, analysisResult: result });
-
+    setSelectedPhoto(updatedPhoto);
   } catch (err) {
     console.error("Error in analyzePhoto:", err);
     setError(`Failed to analyze image: ${err.message}`);
@@ -104,71 +120,86 @@ export const analyzePhoto = async (
 };
 
 export const updatePhotoDetails = async (
-  userId,
   photoId,
-  updates,
+  categories,
+  details,
   setError,
   setPhotos
 ) => {
   try {
     const photoRef = doc(db, "photos", photoId);
-    await updateDoc(photoRef, updates);
+    await updateDoc(photoRef, { categories, details });
     setPhotos((photos) =>
-      photos.map((p) => (p.id === photoId ? { ...p, ...updates } : p))
+      photos.map((p) => (p.id === photoId ? { ...p, categories, details } : p))
     );
   } catch (err) {
-    console.error("Error updating photo details:", err);
+    console.error("Error updating photo categories and details:", err);
     setError(err.message);
   }
 };
 
+
 export const addCategory = async (userId, category, setError) => {
-    try {
-      await addDoc(collection(db, "categories"), { userId, name: category });
-    } catch (err) {
-      console.error("Error adding category:", err);
-      setError(err.message);
+  try {
+    await addDoc(collection(db, "categories"), { userId, name: category });
+  } catch (err) {
+    console.error("Error adding category:", err);
+    setError(err.message);
+  }
+};
+
+export const removeCategory = async (
+  userId,
+  categoryName,
+  setError,
+  setPhotos
+) => {
+  const batch = writeBatch(db);
+
+  try {
+    // Find and delete the category document
+    const categoriesRef = collection(db, "categories");
+    const categoryQuery = query(
+      categoriesRef,
+      where("userId", "==", userId),
+      where("name", "==", categoryName)
+    );
+    const categorySnapshot = await getDocs(categoryQuery);
+
+    if (categorySnapshot.empty) {
+      throw new Error("Category not found");
     }
-  };
-  
-  export const removeCategory = async (userId, categoryName, setError, setPhotos) => {
-    const batch = writeBatch(db);
-  
-    try {
-      // Find and delete the category document
-      const categoriesRef = collection(db, "categories");
-      const categoryQuery = query(categoriesRef, where("userId", "==", userId), where("name", "==", categoryName));
-      const categorySnapshot = await getDocs(categoryQuery);
-      
-      if (categorySnapshot.empty) {
-        throw new Error("Category not found");
-      }
-  
-      const categoryDoc = categorySnapshot.docs[0];
-      batch.delete(doc(db, "categories", categoryDoc.id));
-  
-      // Find all photos with this category and update them
-      const photosRef = collection(db, "photos");
-      const photosQuery = query(photosRef, where("userId", "==", userId), where("category", "==", categoryName));
-      const photosSnapshot = await getDocs(photosQuery);
-  
-      photosSnapshot.forEach((photoDoc) => {
-        const photoRef = doc(db, "photos", photoDoc.id);
-        batch.update(photoRef, { category: "other" });
-      });
-  
-      // Commit the batch
-      await batch.commit();
-  
-      // Update local state
-      setPhotos((prevPhotos) => 
-        prevPhotos.map((photo) => 
-          photo.category === categoryName ? { ...photo, category: "other" } : photo
-        )
-      );
-  
-    } catch (err) {
-      console.error("Error removing category:", err);
-      setError(err.message);
-    }
-  };
+
+    const categoryDoc = categorySnapshot.docs[0];
+    batch.delete(doc(db, "categories", categoryDoc.id));
+
+    // Find all photos with this category and update them
+    const photosRef = collection(db, "photos");
+    const photosQuery = query(
+      photosRef,
+      where("userId", "==", userId),
+      where("category", "==", categoryName)
+    );
+    const photosSnapshot = await getDocs(photosQuery);
+
+    photosSnapshot.forEach((photoDoc) => {
+      const photoRef = doc(db, "photos", photoDoc.id);
+      batch.update(photoRef, { category: "other" });
+    });
+
+    // Commit the batch
+    await batch.commit();
+
+    // Update local state
+    setPhotos((prevPhotos) =>
+      prevPhotos.map((photo) =>
+        photo.category === categoryName
+          ? { ...photo, category: "other" }
+          : photo
+      )
+    );
+  } catch (err) {
+    console.error("Error removing category:", err);
+    setError(err.message);
+  }
+};

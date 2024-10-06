@@ -15,7 +15,7 @@ import {
   analyzePhoto,
   updatePhotoDetails,
   addCategory,
-  removeCategory
+  removeCategory,
 } from "./utils/photoActions";
 
 const PhotoGallery = ({ userId }) => {
@@ -62,7 +62,13 @@ const PhotoGallery = ({ userId }) => {
   };
 
   const handleUpdatePhotoDetails = async (photoId, updates) => {
-    await updatePhotoDetails(userId, photoId, updates, setError, setPhotos);
+    await updatePhotoDetails(
+      photoId,
+      updates.categories,
+      updates.details,
+      setError,
+      setPhotos
+    );
   };
 
   const handleAddUserCategory = async (category) => {
@@ -73,11 +79,12 @@ const PhotoGallery = ({ userId }) => {
     await removeCategory(userId, category, setError, setPhotos);
   };
 
-
-  const filteredPhotos = photos.filter(photo => {
+  const filteredPhotos = photos.filter((photo) => {
     if (showFavoritesOnly && !photo.isFavorite) return false;
     if (filterCategories.length === 0) return true;
-    return filterCategories.some(cat => cat.value === photo.category || cat.value === photo.userCategory);
+    return filterCategories.some(
+      (cat) => photo.categories && photo.categories.includes(cat.value)
+    );
   });
 
   if (photosLoading || categoriesLoading)
@@ -92,17 +99,17 @@ const PhotoGallery = ({ userId }) => {
   return (
     <>
       <div className="ml-5">
-      <GalleryControls
-        sortOrder={sortOrder}
-        setSortOrder={setSortOrder}
-        showFavoritesOnly={showFavoritesOnly}
-        setShowFavoritesOnly={setShowFavoritesOnly}
-        filterCategories={filterCategories}
-        setFilterCategories={setFilterCategories}
-        categories={categories}
-        onAddCategory={handleAddUserCategory}
-        onRemoveCategory={handleRemoveUserCategory}
-      />
+        <GalleryControls
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          showFavoritesOnly={showFavoritesOnly}
+          setShowFavoritesOnly={setShowFavoritesOnly}
+          filterCategories={filterCategories}
+          setFilterCategories={setFilterCategories}
+          categories={categories}
+          onAddCategory={handleAddUserCategory}
+          onRemoveCategory={handleRemoveUserCategory}
+        />
       </div>
       <DndContext
         sensors={sensors}

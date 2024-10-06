@@ -22,10 +22,10 @@ export const GalleryControls = ({
   };
 
   const categoryOptions = [
-    { label: "People", value: "people" },
-    { label: "Nature", value: "nature" },
-    { label: "Sky", value: "sky" },
-    { label: "Other", value: "other" },
+    { label: "People", value: "People" },
+    { label: "Nature", value: "Nature" },
+    { label: "Sky", value: "Sky" },
+    { label: "Other", value: "Other" },
     ...categories.map((cat) => ({ label: cat, value: cat })),
   ];
 
